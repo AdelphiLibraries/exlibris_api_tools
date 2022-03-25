@@ -249,7 +249,7 @@ def read_researcher_data(id, dir=OUTPUT_DIR):
     filename = f'esploro_researcher_{str(id)}.json'
     filepath = os.path.join(dir, filename)
     with open(filepath, "r") as f:
-        res_data = json.load(f)['researcher']
+        res_data = json.load(f)
     return res_data
 
 
