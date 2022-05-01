@@ -38,13 +38,8 @@ DEFAULT_PARAMS = {
 }
 
 
-# TEST
-
-
-#####
-
 def main():
-
+    # Test code here
     quit()
 
 

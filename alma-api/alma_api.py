@@ -25,7 +25,6 @@ OUTPUT_DIR = config["PATHS"]["outputDir"]
 OUTPUT_PATH = config["PATHS"]["outPath"]
 
 PER_PAGE = int(config["DEFAULTS"]["perPage"])  # max 100
-# DATE_FROM = config["DEFAULTS"]["dateFrom"]  # earliest date to harvest
 
 
 # Set MODE = "DEV" to use the Dev API key for operations
@@ -45,7 +44,7 @@ def main():
 
 def get_users():
     # TODO: document this
-    # Warning: this can be very large!
+    # Warning: this can be very large for Production.
     return iterate_response("users", "user")["user"]
 
 
