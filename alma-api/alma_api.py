@@ -15,37 +15,48 @@ CONFIG_PATH = os.path.join(MY_PATH, "config.ini")
 config = ConfigParser()
 config.read(CONFIG_PATH)
 
-BASE_URL = config["URLS"]["esploro"]
+BASE_URL = config["URLS"]["alma"]
 
 # Select which key to use. You can have multiple in the config file, e.g., sandbox, production, etc.
-API_KEY_DEV = config["KEYS"]["esploroDev"]
-API_KEY = config["KEYS"]["esploro"]
+API_KEY_DEV = config["KEYS"]["almaDev"]
+API_KEY = config["KEYS"]["alma"]
 
 OUTPUT_DIR = config["PATHS"]["outputDir"]
-ASSETS_OUT_PATH = config["PATHS"]["assetsOutPath"]
-RESEARCHERS_OUT_PATH = config["PATHS"]["researchersOutPath"]
-ORGS_OUT_PATH = config["PATHS"]["orgsOutPath"]
+OUTPUT_PATH = config["PATHS"]["outPath"]
 
 PER_PAGE = int(config["DEFAULTS"]["perPage"])  # max 100
-DATE_FROM = config["DEFAULTS"]["dateFrom"]  # earliest date to harvest
+# DATE_FROM = config["DEFAULTS"]["dateFrom"]  # earliest date to harvest
 
 
 # Set MODE = "DEV" to use the Dev API key for operations
 MODE = "PROD"
+
 
 DEFAULT_PARAMS = {
     'apikey': API_KEY_DEV if MODE == "DEV" else API_KEY,
 }
 
 
-# TEST
-
-
-#####
-
 def main():
 
+    # Test code here
     quit()
+
+
+def get_users():
+    # TODO: document this
+    # Warning: this can be very large!
+    return iterate_response("users", "user")["user"]
+
+
+def get_user_details(uid):
+    # TODO: document this
+    return get_data(BASE_URL, f"users/{str(uid)}", DEFAULT_PARAMS)
+
+
+def get_po_lines():
+    # TODO: document this
+    return iterate_response("acq/po-lines", "po_line")["po_line"]
 
 
 def iterate_response(endpoint, key, base_url=BASE_URL, params=DEFAULT_PARAMS):
@@ -78,56 +89,6 @@ def iterate_response(endpoint, key, base_url=BASE_URL, params=DEFAULT_PARAMS):
 
     return {"total_record_count": record_cnt,
             key: out_records}
-
-
-def get_assets(date_from=DATE_FROM):
-    # TODO: document this
-    params = DEFAULT_PARAMS
-    params['update_date_from'] = date_from
-    return iterate_response("assets", "records", params=params)["records"]
-
-
-def get_researchers():
-    # TODO: document this
-    return iterate_response("researchers", "user")["user"]
-
-
-def get_organizations():
-    # TODO: document this
-    return iterate_response("organizations/internal", "research_organization")["research_organization"]
-
-
-def compile_researcher_ids(json_path):
-    """Get a list of valid researcher ids
-
-    Args:
-        json_path (str): path to saved JSON researcher file from output_researchers()
-
-    Returns:
-        list: list of ids
-    """
-    with open(json_path, 'r') as f:
-        data = json.load(f)
-    # return [r['primary_id'] for r in data['records']]
-    return [r['primary_id'] for r in data]
-
-
-def get_researcher(researcher_id, base_url=BASE_URL):
-    """Get single researcher from API
-
-    Args:
-        researcher_id (str): id
-        base_url (str, optional): Base url. Defaults to BASE_URL.
-
-    Returns:
-        dict: JSON representation
-    """
-    api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
-    params = {
-        'apikey': api_key,
-        'view': 'full'
-    }
-    return get_data(base_url, f"researchers/{str(researcher_id)}", params)
 
 
 def get_data(base_url, endpoint, params):
@@ -187,40 +148,8 @@ def get_record_count(base_url, endpoint, params):
         return None
 
 
-def output_researchers(json_file, dir=OUTPUT_DIR):
-    """Save individual researcher data in one JSON file each.
-
-    Args:
-        json_file (str): Path to source JSON file as created by output_researchers()
-        dir (str, optional): Directory to save files. Defaults to OUTPUT_DIR.
-    """
-    res_ids = compile_researcher_ids(json_file)
-    for r in res_ids:
-        out_path = os.path.join(dir, f'esploro_researcher_{r}.json')
-        print(f"getting researcher id {str(r)}")
-        x = get_researcher(r)
-        save_json(x, out_path)
-
-
-def read_researcher_data(id, dir=OUTPUT_DIR):
-    """Read individual researcher data from saved JSON file. Must be run after output_researchers() has run. 
-
-    Args:
-        id (str): Researcher id
-        dir (str, optional): Folder containing the JSON files. Defaults to OUTPUT_DIR.
-
-    Returns:
-        dict: JSON data 
-    """
-    filename = f'esploro_researcher_{str(id)}.json'
-    filepath = os.path.join(dir, filename)
-    with open(filepath, "r") as f:
-        res_data = json.load(f)
-    return res_data
-
-
-def save_json(data, output_path):
-    """save output as json file
+def save_data(data, output_path):
+    """save output as JSON file
 
     Args:
         data (dict): JSON representation
