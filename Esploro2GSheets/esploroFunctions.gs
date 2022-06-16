@@ -1,12 +1,13 @@
 // Esploro API docs: https://developers.exlibrisgroup.com/esploro/apis/
 
-var update_date_from = "2020-01-01";
-var limit = 100;
-var cursor = 0;
+//// THESE ARE NOW IN THE config.gs FILE.
+// var update_date_from = "2020-01-01";
+// var limit = 100;
+// var cursor = 0;
 
-var dataFolderID = "xxxxxxxxxxxxxxxxxxxxxxx"; // the ID of folder where JSON data is saved.
-var researchersDataFile = "esploro_researchers_data.json";
-var assetsDataFile = "esploro_assets_data.json";
+// var dataFolderID = "xxxxxxxxxxxxxxxxxxxxxxx"; // the ID of folder where JSON data is saved.
+// var researchersDataFile = "esploro_researchers_data.json"; // name of researcher JSON file
+// var assetsDataFile = "esploro_assets_data.json"; // name of assets JSON file
 
 // set API info from adjacent config.gs file
 var apiKey = keys.esploroProd;
