@@ -1,26 +1,30 @@
 // Esploro API docs: https://developers.exlibrisgroup.com/esploro/apis/
 
-var update_date_from = "2020-01-01";
-var limit = 100;
-var cursor = 0;
+//// THESE ARE NOW IN THE config.gs FILE.
+// var update_date_from = "2020-01-01";
+// var limit = 100;
+// var cursor = 0;
+
+// var dataFolderID = "xxxxxxxxxxxxxxxxxxxxxxx"; // the ID of folder where JSON data is saved.
+// var researchersDataFile = "esploro_researchers_data.json"; // name of researcher JSON file
+// var assetsDataFile = "esploro_assets_data.json"; // name of assets JSON file
 
 // set API info from adjacent config.gs file
 var apiKey = keys.esploroProd;
 var baseUrl = urls.esploroUrl;
 
-var researchersDataFile = "esploro_researchers_data.json";
-var assetsDataFile = "esploro_assets_data.json";
-
 function harvestEsploroResearchers() {
   // harvest all researcher data from API as a single list of records and save to JSON in Drive.
+  deleteFile(researchersDataFile, dataFolderID);
   var researchers = getEsploroResearchers();
-  saveAsJSON(researchers, researchersDataFile);
+  saveAsJSON(researchers, researchersDataFile, dataFolderID);
 }
 
 function harvestEsploroAssets() {
   // harvest all assets data from API as a single list of records and save to JSON in Drive.
+  deleteFile(assetsDataFile, dataFolderID);
   var assets = getEsploroAssets();
-  saveAsJSON(assets, assetsDataFile);
+  saveAsJSON(assets, assetsDataFile, dataFolderID);
 }
 
 function populateTables() {
@@ -58,8 +62,7 @@ function getEsploroResearchers() {
 
 function outputEsploroResearchers() {
   // Read researchers from JSON file in Drive and output tabular data to sheet.
-  records = loadJSON(researchersDataFile);
-
+  records = loadJSON(researchersDataFile, dataFolderID);
   researcherSheet = mySheet("researchers");
   researcherSheet.clear();
 
@@ -117,8 +120,7 @@ function getEsploroAssets() {
 
 function outputEsploroAssets() {
   // Read assets from JSON file in Drive and output tabular data to sheet.
-  records = loadJSON(assetsDataFile);
-
+  records = loadJSON(assetsDataFile, dataFolderID);
   assetSheet = mySheet("assets");
   assetSheet.clear();
 
@@ -161,10 +163,8 @@ function outputEsploroAssets() {
 }
 
 function outputEsploroAgents() {
-  records = loadJSON(assetsDataFile);
-
+  records = loadJSON(assetsDataFile, dataFolderID);
   agentSheet = mySheet("agents");
-
   agentSheet.clear();
 
   // Headers for agents table
@@ -199,10 +199,8 @@ function outputEsploroAgents() {
 }
 
 function outputEsploroLinks() {
-  records = loadJSON(assetsDataFile);
-
+  records = loadJSON(assetsDataFile, dataFolderID);
   linksSheet = mySheet("links");
-
   linksSheet.clear();
 
   // Headers for agents table
@@ -222,7 +220,7 @@ function outputEsploroLinks() {
 }
 
 function outputEsploroFiles() {
-  records = loadJSON(assetsDataFile);
+  records = loadJSON(assetsDataFile, dataFolderID);
   filesSheet = mySheet("files");
   filesSheet.clear();
 
@@ -445,48 +443,56 @@ function getRecordCount(endpoint) {
   return parseInt(data[countKey]);
 }
 
-function saveAsJSON(obj, fileName) {
-  // borrowed from https://stackoverflow.com/questions/52777524/how-to-save-a-json-file-to-google-drive-using-google-apps-script
-  // TODO: find way to save to a folder.
+function saveAsJSON(obj, fileName, folderID) {
   var blob, file, fileSets, obj;
 
-  var parentFolder = DriveApp.getFolderById(
-    "1wRt9fLwx7DKgv_gNkKQBm_WJPJJ3Iz-Y"
-  );
-
-  fileSets = {
-    title: fileName,
-    mimeType: "application/json",
-  };
+  var parentFolder = DriveApp.getFolderById(folderID);
 
   blob = Utilities.newBlob(
     JSON.stringify(obj),
     "application/vnd.google-apps.script+json"
   );
-  file = Drive.Files.insert(fileSets, blob);
-  Logger.log(
-    "ID: %s, File size (bytes): %s, type: %s",
-    file.id,
-    file.fileSize,
-    file.mimeType
-  );
-  return file.id;
+
+  blob = Utilities.newBlob(JSON.stringify(obj), MimeType.PLAIN_TEXT, fileName); //Create a blob with random characters
+
+  var ff = parentFolder.createFile(blob);
 }
 
-function loadJSON(fileName) {
+function loadJSON(fileName, folderID) {
   // Load file from Drive by name.
   // TODO: find way to get from within a folder
-  var files = DriveApp.getFilesByName(fileName);
-  if (files.hasNext()) {
+  var folder = DriveApp.getFolderById(folderID);
+  var files = folder.getFiles();
+
+  while (files.hasNext()) {
     var file = files.next();
-    var content = file.getBlob().getDataAsString();
-    var json = JSON.parse(content);
-    return json;
+    var theName = file.getName();
+    Logger.log(theName);
+    if (theName == fileName) {
+      var content = file.getBlob().getDataAsString();
+      var json = JSON.parse(content);
+      return json;
+    }
+  }
+}
+
+function deleteFile(myFileName, myFolderID) {
+  // borrowed from https://stackoverflow.com/questions/14241237/how-to-delete-a-file-in-google-drive
+  var allFiles, idToDLET, myFolder, rtrnFromDLET, thisFile;
+
+  myFolder = DriveApp.getFolderById(myFolderID);
+  allFiles = myFolder.getFilesByName(myFileName);
+
+  while (allFiles.hasNext()) {
+    thisFile = allFiles.next();
+    idToDLET = thisFile.getId();
+    Logger.log("idToDLET: " + idToDLET);
+
+    rtrnFromDLET = Drive.Files.remove(idToDLET);
   }
 }
 
 function test() {
-  //   x = getEsploroResearchers();
-
+  x = deleteFile(researchersDataFile, dataFolderID);
   Logger.log(x);
 }
