@@ -28,7 +28,7 @@ PER_PAGE = int(config["DEFAULTS"]["perPage"])  # max 100
 
 
 # Set MODE = "DEV" to use the Dev API key for operations
-MODE = "PROD"
+MODE = "DEV"
 
 
 DEFAULT_PARAMS = {
@@ -42,6 +42,46 @@ def main():
     quit()
 
 
+#### TEST ####
+
+def update_user(user_id, data):
+    # TODO: document this
+    return put_data(f"users/{str(user_id)}", json.dumps(data))
+
+
+def put_data(endpoint, data, base_url=BASE_URL):
+    # TODO: document this
+    headers = {'content-type': 'application/json'}
+    api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
+    params = {
+        'apikey': api_key,
+        'format': 'json'
+    }
+    url = base_url + endpoint
+    try:
+        print("*** PUT_DATA ***")
+        print(f'***  URL: {url}')
+        print("Params:")
+        print(params)
+        print("***")
+        r = requests.put(url, params=params, data=data, headers=headers)
+        return json.loads(r.content)
+    except requests.exceptions.RequestException as e:
+        print('*** ERROR: could not connect to API. Check configuration. ' + str(e))
+        print(f'URL: {url}')
+        exit()
+    except json.decoder.JSONDecodeError as e:
+        print('*** ERROR: JSON response was not as expected. ' + str(e))
+        print(f'URL: {url}')
+        exit()
+
+
+##############
+
+
+
+
+
 def get_users():
     # TODO: document this
     # Warning: this can be very large for Production.
@@ -50,7 +90,11 @@ def get_users():
 
 def get_user_details(uid):
     # TODO: document this
-    return get_data(BASE_URL, f"users/{str(uid)}", DEFAULT_PARAMS)
+    api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
+    params = {
+        'apikey': api_key,
+    }    
+    return get_data(BASE_URL, f"users/{str(uid)}", params)
 
 
 def get_po_lines():
