@@ -4,6 +4,7 @@ import os
 from configparser import ConfigParser
 from pprint import pprint
 import csv
+
 # import time
 
 MY_NAME = __file__
@@ -32,17 +33,25 @@ MODE = "DEV"
 
 
 DEFAULT_PARAMS = {
-    'apikey': API_KEY_DEV if MODE == "DEV" else API_KEY,
+    "apikey": API_KEY_DEV if MODE == "DEV" else API_KEY,
 }
 
 
 def main():
-
     # Test code here
     quit()
 
 
 #### TEST ####
+
+
+def get_code_table(code_table_name):
+    api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
+    params = {
+        "apikey": api_key,
+    }
+    return get_data(BASE_URL, f"conf/code-tables/{code_table_name}", params=params)
+
 
 def update_user(user_id, data):
     # TODO: document this
@@ -51,35 +60,29 @@ def update_user(user_id, data):
 
 def put_data(endpoint, data, base_url=BASE_URL):
     # TODO: document this
-    headers = {'content-type': 'application/json'}
+    headers = {"content-type": "application/json"}
     api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
-    params = {
-        'apikey': api_key,
-        'format': 'json'
-    }
+    params = {"apikey": api_key, "format": "json"}
     url = base_url + endpoint
     try:
         print("*** PUT_DATA ***")
-        print(f'***  URL: {url}')
+        print(f"***  URL: {url}")
         print("Params:")
         print(params)
         print("***")
         r = requests.put(url, params=params, data=data, headers=headers)
         return json.loads(r.content)
     except requests.exceptions.RequestException as e:
-        print('*** ERROR: could not connect to API. Check configuration. ' + str(e))
-        print(f'URL: {url}')
+        print("*** ERROR: could not connect to API. Check configuration. " + str(e))
+        print(f"URL: {url}")
         exit()
     except json.decoder.JSONDecodeError as e:
-        print('*** ERROR: JSON response was not as expected. ' + str(e))
-        print(f'URL: {url}')
+        print("*** ERROR: JSON response was not as expected. " + str(e))
+        print(f"URL: {url}")
         exit()
 
 
 ##############
-
-
-
 
 
 def get_users():
@@ -92,8 +95,8 @@ def get_user_details(uid):
     # TODO: document this
     api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
     params = {
-        'apikey': api_key,
-    }    
+        "apikey": api_key,
+    }
     return get_data(BASE_URL, f"users/{str(uid)}", params)
 
 
@@ -106,19 +109,20 @@ def iterate_response(endpoint, key, base_url=BASE_URL, params=DEFAULT_PARAMS):
     # sourcery skip: use-fstring-for-concatenation
     api_key = API_KEY_DEV if MODE == "DEV" else API_KEY
     cursor = 0
-    params['offset'] = cursor
-    params['apikey'] = api_key
+    params["offset"] = cursor
+    params["apikey"] = api_key
 
     record_cnt = get_record_count(base_url, endpoint, params)
     print(f"Found {str(record_cnt)} records.")
     out_records = []
 
     while cursor <= record_cnt:
-        params['offset'] = cursor
-        params['limit'] = PER_PAGE
+        params["offset"] = cursor
+        params["limit"] = PER_PAGE
 
-        upper_bound = record_cnt if (
-            cursor + PER_PAGE) >= record_cnt else cursor + PER_PAGE
+        upper_bound = (
+            record_cnt if (cursor + PER_PAGE) >= record_cnt else cursor + PER_PAGE
+        )
         print(
             (
                 (f"*** Getting records {str(cursor + 1)}" + " to ")
@@ -126,12 +130,11 @@ def iterate_response(endpoint, key, base_url=BASE_URL, params=DEFAULT_PARAMS):
                 + " ..."
             )
         )
-        newdata = get_data(base_url,  endpoint, params)[key]
+        newdata = get_data(base_url, endpoint, params)[key]
         out_records += newdata
         cursor += PER_PAGE
 
-    return {"total_record_count": record_cnt,
-            key: out_records}
+    return {"total_record_count": record_cnt, key: out_records}
 
 
 def get_data(base_url, endpoint, params):
@@ -145,23 +148,23 @@ def get_data(base_url, endpoint, params):
     Returns:
         dict: JSON representation
     """
-    params['format'] = 'json'
+    params["format"] = "json"
     url = base_url + endpoint
     try:
         print("*** GET_DATA *************")
-        print(f'*** Request URL: {url}')
+        print(f"*** Request URL: {url}")
         print("Params:")
         print(params)
         print("***")
         r = requests.get(url, params=params)
         return json.loads(r.content)
     except requests.exceptions.RequestException as e:
-        print('*** ERROR: could not connect to API. Check configuration. ' + str(e))
-        print(f'URL: {url}')
+        print("*** ERROR: could not connect to API. Check configuration. " + str(e))
+        print(f"URL: {url}")
         exit()
     except json.decoder.JSONDecodeError as e:
-        print('*** ERROR: JSON response was not as expected. ' + str(e))
-        print(f'URL: {url}')
+        print("*** ERROR: JSON response was not as expected. " + str(e))
+        print(f"URL: {url}")
         exit()
 
 
@@ -176,17 +179,17 @@ def get_record_count(base_url, endpoint, params):
     Returns:
         int: Number of records to expect
     """
-    params['limit'] = 1
+    params["limit"] = 1
     print("*** get_record_count *************")
     # print(base_url)
     # print(endpoint)
     # print(params)
     response = get_data(base_url, endpoint, params)
     # print(response)
-    if 'totalRecordCount' in response:
-        return response['totalRecordCount']
-    elif 'total_record_count' in response:
-        return response['total_record_count']
+    if "totalRecordCount" in response:
+        return response["totalRecordCount"]
+    elif "total_record_count" in response:
+        return response["total_record_count"]
     else:
         return None
 
@@ -203,5 +206,5 @@ def save_data(data, output_path):
         json.dump(data, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
